@@ -1,10 +1,37 @@
+from django.contrib.auth import authenticate
+
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from rest_framework import status
 
 from .models import Product
 from .serializers import ProductSerializer
+
+
+@api_view(["POST"])
+def login(request):
+
+    username = request.data.get("username", None)
+    password = request.data.get("password", None)
+
+    user = authenticate(username=username.strip(), password=password.strip())
+
+    if user is not None:
+        if user.is_superuser:
+            return Response({
+                "message": "Login successful",
+                "is_admin": True
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                "message": "Login failed",
+                "is_admin": False
+            }, status=status.HTTP_403_FORBIDDEN)
+    else:
+        return Response({
+            "error": "Invalid username or password"
+        }, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class ProductViewSet(ModelViewSet):
